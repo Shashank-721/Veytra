@@ -1,0 +1,37 @@
+# LLM / Agent framework
+langchain
+langchain-community
+langgraph
+
+# Hugging Face
+huggingface_hub
+langchain-huggingface
+
+# API
+fastapi
+uvicorn[standard]
+
+# Database
+sqlalchemy
+aiosqlite
+
+# Configuration / environment
+python-dotenv
+pydantic
+pydantic-settings
+
+# MCP
+mcp
+
+# HTTP / async
+httpx
+
+# Observability & evaluation
+langsmith
+
+# Streamlit demo
+streamlit
+
+# Testing
+pytest
+pytest-asyncio

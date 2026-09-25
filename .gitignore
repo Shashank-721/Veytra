@@ -1,0 +1,18 @@
+# Environment variables / secrets
+.env
+
+# Virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# SQLite database
+veytra.db
+
+# IDE files
+.idea/
+.vscode/
+
+# OS filesgit add .
