@@ -32,6 +32,9 @@ class IncidentDB(Base):
     # Incident severity: LOW, MEDIUM, HIGH, or CRITICAL
     severity: Mapped[str] = mapped_column(String(20))
 
+    # Root cause identified by Veytra
+    root_cause: Mapped[str | None] = mapped_column(String, nullable=True) #Existing incidents were created before we had a root_cause column. Making it nullable means those existing records can still exist without a root cause.
+
     # Current lifecycle status of the incident
     status: Mapped[str] = mapped_column(String(30))
 

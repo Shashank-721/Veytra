@@ -128,8 +128,12 @@ def generate_hypotheses(state: InvestigationState):
     For each hypothesis, return a JSON object with exactly these fields:
     - cause
     - confidence: a number between 0 and 1
-    - supporting_evidence: a list of specific evidence statements,
-      where each item is a string
+    - supporting_evidence: a list of at most 2 short evidence statements
+
+    Keep each evidence statement under 15 words.
+    Do not include raw Python dictionaries or JSON inside supporting_evidence.
+    Generate at most 3 hypotheses.
+    Keep the entire response concise.
 
     Return the hypotheses as a JSON array.
     Do not include any other text.
@@ -146,13 +150,34 @@ def generate_hypotheses(state: InvestigationState):
     # DEBUG: Inspect the raw hypothesis response from the LLM.
     print("RAW HYPOTHESES:", hypothesis_text)
 
-    # Remove Markdown JSON code fences if the LLM
-    # wraps the JSON response inside ```json ... ```.
-    if hypothesis_text.startswith("```json"):
-        hypothesis_text = hypothesis_text[7:]
+    # Find the beginning of the JSON array.
+    #
+    # This handles responses such as:
+    #
+    # ```
+    # [
+    #     {...}
+    # ]
+    # ```
+    #
+    # and:
+    #
+    # ```json
+    # [
+    #     {...}
+    # ]
+    # ```
+    #
+    # It also handles cases where the LLM adds
+    # explanatory text before or after the JSON.
+    json_start = hypothesis_text.find("[")
 
-    if hypothesis_text.endswith("```"):
-        hypothesis_text = hypothesis_text[:-3]
+    # Find the end of the JSON array.
+    json_end = hypothesis_text.rfind("]")
+
+    # Keep only the JSON array.
+    if json_start != -1 and json_end != -1:
+        hypothesis_text = hypothesis_text[json_start:json_end + 1]
 
     # Remove any extra whitespace after cleanup.
     hypothesis_text = hypothesis_text.strip()
@@ -258,11 +283,11 @@ def evaluate_hypotheses(state: InvestigationState):
     #
     # This prevents errors when the LLM returns something like:
     #
-    # {
-    #     "evaluations": [
-    #         {...}
-    #     ]
-    # }
+    # Here is the evaluation:
+    #
+    # [
+    #     {...}
+    # ]
     #
     # We extract only the [...] portion because our
     # Pydantic validation expects a list of evaluations.
@@ -292,24 +317,18 @@ def evaluate_hypotheses(state: InvestigationState):
 
 # Decide what should happen next based on the hypothesis evaluation.
 def make_decision(state: InvestigationState):
-
-    # Get the evaluation results from the investigation.
     evaluations = state["evaluation"]
 
-    # Check whether at least one hypothesis is supported.
     supported_hypotheses = [
         evaluation
         for evaluation in evaluations
         if evaluation["supported"]
     ]
 
-    # If we have supporting evidence, move toward remediation.
     if supported_hypotheses:
+        state["root_cause"] = supported_hypotheses[0]["hypothesis"]
         state["decision"] = "REMEDIATION_REQUIRED"
-
     else:
-        # If no hypothesis is supported, continue investigating.
         state["decision"] = "CONTINUE_INVESTIGATION"
 
-    # Return the updated state to LangGraph.
     return state

@@ -4,6 +4,7 @@
 
 # SQLAlchemy query builder
 from sqlalchemy import select
+from datetime import datetime
 
 # SQLAlchemy async session used for database operations
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,3 +41,34 @@ class IncidentRepository:
 
         # Return the incident if found, otherwise return None
         return result.scalar_one_or_none()
+
+    # Update the status of an existing incident
+    # Update the status of an existing incident
+    async def update_status(
+            self,
+            incident_id: str,
+            status: str,
+            root_cause: str | None = None,
+    ) -> IncidentDB | None:
+        # Find the incident in the database
+        incident = await self.get_incident(incident_id)
+
+        if incident is None:
+            return None
+
+        # Update the incident status
+        incident.status = status
+
+        # Save the root cause identified by Veytra
+        incident.root_cause = root_cause
+
+        # Update the last modified timestamp
+        incident.updated_at = datetime.utcnow()
+
+        # Save the changes
+        await self.session.commit()
+
+        # Refresh the object with the latest database state
+        await self.session.refresh(incident)
+
+        return incident

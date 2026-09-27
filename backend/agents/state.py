@@ -36,3 +36,9 @@ class InvestigationState(TypedDict):
     # Expected values:
     # PENDING, APPROVED, or REJECTED.
     approval: str
+
+    postmortem: dict
+
+    root_cause: str
+
+    resolution: str

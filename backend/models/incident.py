@@ -28,5 +28,6 @@ class IncidentResponse(BaseModel):
         "RESOLVED",
         "FAILED",
     ]
+    root_cause: str | None = None
     created_at: datetime
     updated_at: datetime
